@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Reservation - Smart Parking System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">SmartPark</div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+            <a href="#" class="nav-link" id="logoutBtn">Logout</a>
+        </div>
+    </nav>
+
+    <main class="reservation-container">
+        <h1>New Reservation</h1>
+        <form id="reservationForm" class="reservation-form">
+            <div class="form-group">
+                <label for="parkingLot">Select Parking Lot</label>
+                <select id="parkingLot" name="parkingLot" required>
+                    <option value="">Choose a parking lot</option>
+                    <!-- Parking lots will be dynamically added here -->
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="slotNumber">Select Slot</label>
+                <select id="slotNumber" name="slotNumber" required disabled>
+                    <option value="">Choose a slot</option>
+                    <!-- Available slots will be dynamically added here -->
+                </select>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="startTime">Start Time</label>
+                    <input type="datetime-local" id="startTime" name="startTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="endTime">End Time</label>
+                    <input type="datetime-local" id="endTime" name="endTime" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="vehicleNumber">Vehicle Number</label>
+                <input type="text" id="vehicleNumber" name="vehicleNumber" required>
+            </div>
+
+            <div class="form-group">
+                <label for="vehicleType">Vehicle Type</label>
+                <select id="vehicleType" name="vehicleType" required>
+                    <option value="car">Car</option>
+                    <option value="bike">Bike</option>
+                    <option value="truck">Truck</option>
+                </select>
+            </div>
+
+            <div class="reservation-summary" id="reservationSummary" style="display: none;">
+                <h3>Reservation Summary</h3>
+                <div class="summary-details">
+                    <p>Duration: <span id="duration">0</span> hours</p>
+                    <p>Rate: $<span id="rate">0</span> per hour</p>
+                    <p>Total: $<span id="total">0</span></p>
+                </div>
+            </div>
+
+            <button type="submit" class="btn primary">Proceed to Payment</button>
+        </form>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html> 
