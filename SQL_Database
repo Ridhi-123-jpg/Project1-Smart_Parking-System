@@ -1,0 +1,118 @@
+create database sps;
+use sps;
+CREATE TABLE Users (
+    User_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(100) NOT NULL,
+    Email VARCHAR(100) UNIQUE NOT NULL,
+    Phone VARCHAR(15),
+    Password VARCHAR(255) NOT NULL,
+    Role ENUM('Driver', 'Admin') NOT NULL
+);
+show tables;
+CREATE TABLE Vehicles (
+    Vehicle_ID INT PRIMARY KEY AUTO_INCREMENT,
+    User_ID INT NOT NULL,
+    License_Plate VARCHAR(20) UNIQUE NOT NULL,
+    Vehicle_Type VARCHAR(50),
+    FOREIGN KEY (User_ID) REFERENCES Users(User_ID)
+);
+show tables;
+CREATE TABLE Parking_Lots (
+    Lot_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Location VARCHAR(255) NOT NULL,
+    Total_Slots INT NOT NULL,
+    Available_Slots INT NOT NULL
+);
+show tables;
+CREATE TABLE Parking_Slots (
+    Slot_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Lot_ID INT NOT NULL,
+    Slot_Number VARCHAR(10) NOT NULL,
+    Status ENUM('Available', 'Occupied', 'Reserved') DEFAULT 'Available',
+    FOREIGN KEY (Lot_ID) REFERENCES Parking_Lots(Lot_ID)
+);
+show tables;
+CREATE TABLE Reservations (
+    Reservation_ID INT PRIMARY KEY AUTO_INCREMENT,
+    User_ID INT NOT NULL,
+    Slot_ID INT NOT NULL,
+    Start_Time DATETIME NOT NULL,
+    End_Time DATETIME NOT NULL,
+    Status ENUM('Active', 'Completed', 'Cancelled') DEFAULT 'Active',
+    FOREIGN KEY (User_ID) REFERENCES Users(User_ID),
+    FOREIGN KEY (Slot_ID) REFERENCES Parking_Slots(Slot_ID)
+);
+show tables;
+CREATE TABLE Entry_Exit_Logs (
+    Log_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Vehicle_ID INT NOT NULL,
+    Slot_ID INT NOT NULL,
+    Entry_Time DATETIME NOT NULL,
+    Exit_Time DATETIME,
+    FOREIGN KEY (Vehicle_ID) REFERENCES Vehicles(Vehicle_ID),
+    FOREIGN KEY (Slot_ID) REFERENCES Parking_Slots(Slot_ID)
+);
+show tables;
+CREATE TABLE Payments (
+    Payment_ID INT PRIMARY KEY AUTO_INCREMENT,
+    User_ID INT NOT NULL,
+    Reservation_ID INT NOT NULL,
+    Amount DECIMAL(10, 2) NOT NULL,
+    Payment_Method ENUM('Card', 'UPI', 'Cash', 'Online') NOT NULL,
+    Payment_Time DATETIME NOT NULL,
+    FOREIGN KEY (User_ID) REFERENCES Users(User_ID),
+    FOREIGN KEY (Reservation_ID) REFERENCES Reservations(Reservation_ID)
+);
+show tables;
+INSERT INTO Users (Name, Email, Phone, Password, Role)
+VALUES 
+('Alice Johnson', 'alice@example.com', '9876543210', 'hashedpassword1', 'Driver'),
+('Bob Smith', 'bob@example.com', '9123456780', 'hashedpassword2', 'Admin');
+INSERT INTO Vehicles (User_ID, License_Plate, Vehicle_Type)
+VALUES 
+(1, 'MH12AB1234', 'Sedan'),
+(1, 'MH12XY5678', 'SUV');
+INSERT INTO Parking_Lots (Location, Total_Slots, Available_Slots)
+VALUES 
+('Downtown Mall', 50, 48),
+('Airport Terminal', 100, 96);
+INSERT INTO Parking_Slots (Lot_ID, Slot_Number, Status)
+VALUES 
+(1, 'A1', 'Available'),
+(1, 'A2', 'Occupied'),
+(2, 'B1', 'Reserved');
+INSERT INTO Reservations (User_ID, Slot_ID, Start_Time, End_Time, Status)
+VALUES 
+(1, 1, '2025-05-16 10:00:00', '2025-05-16 12:00:00', 'Active');
+INSERT INTO Entry_Exit_Logs (Vehicle_ID, Slot_ID, Entry_Time, Exit_Time)
+VALUES 
+(1, 1, '2025-05-16 10:05:00', NULL);
+INSERT INTO Payments (User_ID, Reservation_ID, Amount, Payment_Method, Payment_Time)
+VALUES 
+(1, 1, 100.00, 'UPI', '2025-05-16 10:01:00');
+SELECT * FROM Users;
+SELECT * FROM Vehicles
+WHERE User_ID = 1;
+SELECT * FROM Parking_Slots
+WHERE Status = 'Available';
+SELECT r.Reservation_ID, u.Name, ps.Slot_Number, r.Start_Time, r.End_Time, r.Status
+FROM Reservations r
+JOIN Users u ON r.User_ID = u.User_ID
+JOIN Parking_Slots ps ON r.Slot_ID = ps.Slot_ID
+WHERE r.User_ID = 1;
+SELECT l.Log_ID, v.License_Plate, ps.Slot_Number, l.Entry_Time
+FROM Entry_Exit_Logs l
+JOIN Vehicles v ON l.Vehicle_ID = v.Vehicle_ID
+JOIN Parking_Slots ps ON l.Slot_ID = ps.Slot_ID
+WHERE l.Exit_Time IS NULL;
+SELECT p.Payment_ID, u.Name, p.Amount, p.Payment_Method, p.Payment_Time
+FROM Payments p
+JOIN Users u ON p.User_ID = u.User_ID
+WHERE p.Reservation_ID = 1;
+SELECT Location, Total_Slots, Available_Slots
+FROM Parking_Lots;
+SELECT r.Reservation_ID, u.Name, ps.Slot_Number, pl.Location, r.Start_Time, r.End_Time, r.Status
+FROM Reservations r
+JOIN Users u ON r.User_ID = u.User_ID
+JOIN Parking_Slots ps ON r.Slot_ID = ps.Slot_ID
+JOIN Parking_Lots pl ON ps.Lot_ID = pl.Lot_ID;
