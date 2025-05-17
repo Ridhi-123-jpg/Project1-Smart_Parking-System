@@ -1,0 +1,863 @@
+// Mock data storage using localStorage
+const Storage = {
+    users: [],
+    parkingLots: [],
+    reservations: [],
+    currentUser: null,
+
+    init() {
+        // Load data from localStorage or initialize with defaults
+        this.users = JSON.parse(localStorage.getItem('users')) || [];
+        this.parkingLots = JSON.parse(localStorage.getItem('parkingLots')) || [];
+        this.reservations = JSON.parse(localStorage.getItem('reservations')) || [];
+        this.currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+
+        // Initialize sample data if any of the arrays are empty
+        if (this.users.length === 0 || this.parkingLots.length === 0 || this.reservations.length === 0) {
+            this.initializeSampleData();
+        }
+    },
+
+    initializeSampleData() {
+        // Initialize users
+        this.users = [
+            { id: 1, name: 'Admin User', email: 'admin@example.com', password: 'admin123', type: 'admin' },
+            { id: 2, name: 'Regular User', email: 'user@example.com', password: 'user123', type: 'user' }
+        ];
+
+        // Initialize parking lots
+        this.parkingLots = [
+            {
+                id: 1,
+                name: 'Downtown Parking',
+                location: '123 Main St',
+                totalSlots: 50,
+                availableSlots: 45,
+                rate: 5,
+                slots: Array(50).fill().map((_, i) => ({
+                    id: i + 1,
+                    status: i < 45 ? 'available' : 'occupied'
+                }))
+            },
+            {
+                id: 2,
+                name: 'Mall Parking',
+                location: '456 Shopping Ave',
+                totalSlots: 100,
+                availableSlots: 80,
+                rate: 3,
+                slots: Array(100).fill().map((_, i) => ({
+                    id: i + 1,
+                    status: i < 80 ? 'available' : 'occupied'
+                }))
+            }
+        ];
+
+        // Initialize sample reservations
+        const now = new Date();
+        const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+        this.reservations = [
+            {
+                id: 1,
+                userId: 2, // Regular User
+                parkingLotId: 1,
+                slotNumber: 1,
+                startTime: now.toISOString(),
+                endTime: tomorrow.toISOString(),
+                vehicleNumber: 'ABC123',
+                vehicleType: 'Car',
+                status: 'confirmed',
+                amount: 120,
+                paymentMethod: 'card',
+                paymentStatus: 'completed'
+            },
+            {
+                id: 2,
+                userId: 2, // Regular User
+                parkingLotId: 2,
+                slotNumber: 10,
+                startTime: tomorrow.toISOString(),
+                endTime: nextWeek.toISOString(),
+                vehicleNumber: 'XYZ789',
+                vehicleType: 'SUV',
+                status: 'pending',
+                amount: 504
+            }
+        ];
+
+        // Save all initialized data
+        this.saveAll();
+    },
+
+    saveAll() {
+        this.saveUsers();
+        this.saveParkingLots();
+        this.saveReservations();
+        this.saveCurrentUser();
+    },
+
+    saveUsers() {
+        localStorage.setItem('users', JSON.stringify(this.users));
+    },
+
+    saveParkingLots() {
+        localStorage.setItem('parkingLots', JSON.stringify(this.parkingLots));
+    },
+
+    saveReservations() {
+        localStorage.setItem('reservations', JSON.stringify(this.reservations));
+    },
+
+    saveCurrentUser() {
+        localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+    },
+
+    clearCurrentUser() {
+        this.currentUser = null;
+        this.saveCurrentUser();
+    },
+
+    // Add method to verify and fix data
+    verifyAndFixData() {
+        // Ensure all required arrays exist
+        if (!Array.isArray(this.users)) this.users = [];
+        if (!Array.isArray(this.parkingLots)) this.parkingLots = [];
+        if (!Array.isArray(this.reservations)) this.reservations = [];
+
+        // Save the fixed data
+        this.saveAll();
+    }
+};
+
+// Initialize Storage when the script loads
+Storage.init();
+
+// Authentication functions
+function handleLogin(event) {
+    event.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const userType = document.getElementById('userType').value;
+
+    const user = Storage.users.find(u => 
+        u.email === email && 
+        u.password === password && 
+        u.type === userType
+    );
+
+    if (user) {
+        Storage.currentUser = user;
+        Storage.saveCurrentUser();
+        window.location.href = 'dashboard.html';
+    } else {
+        alert('Invalid credentials or user type');
+    }
+}
+
+function handleRegister(event) {
+    event.preventDefault();
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const userType = document.getElementById('userType').value;
+
+    if (password !== confirmPassword) {
+        alert('Passwords do not match');
+        return;
+    }
+
+    if (Storage.users.some(u => u.email === email)) {
+        alert('Email already registered');
+        return;
+    }
+
+    const newUser = {
+        id: Storage.users.length + 1,
+        name,
+        email,
+        password,
+        type: userType
+    };
+
+    Storage.users.push(newUser);
+    Storage.saveAll();
+    alert('Registration successful! Please login.');
+    window.location.href = 'login.html';
+}
+
+function handleLogout() {
+    Storage.clearCurrentUser();
+    window.location.href = 'index.html';
+}
+
+// Dashboard functions
+function loadDashboard() {
+    // Verify current user
+    if (!Storage.currentUser) {
+        console.log('No current user found, redirecting to login');
+        window.location.href = 'login.html';
+        return;
+    }
+
+    console.log('Loading dashboard for user:', Storage.currentUser);
+
+    // Update user information
+    const userNameElement = document.getElementById('userName');
+    const userTypeBadgeElement = document.getElementById('userTypeBadge');
+    
+    if (userNameElement) userNameElement.textContent = Storage.currentUser.name;
+    if (userTypeBadgeElement) userTypeBadgeElement.textContent = Storage.currentUser.type;
+
+    // Show appropriate dashboard
+    const userDashboard = document.getElementById('userDashboard');
+    const adminDashboard = document.getElementById('adminDashboard');
+
+    if (!userDashboard || !adminDashboard) {
+        console.error('Dashboard elements not found');
+        return;
+    }
+
+    if (Storage.currentUser.type === 'admin') {
+        console.log('Loading admin dashboard');
+        userDashboard.style.display = 'none';
+        adminDashboard.style.display = 'block';
+        loadAdminDashboard();
+    } else {
+        console.log('Loading user dashboard');
+        userDashboard.style.display = 'block';
+        adminDashboard.style.display = 'none';
+        loadUserDashboard();
+    }
+}
+
+function loadUserDashboard() {
+    console.log('Loading user dashboard data');
+    
+    const parkingLotsContainer = document.getElementById('parkingLots');
+    const reservationsContainer = document.getElementById('userReservations');
+
+    if (!parkingLotsContainer || !reservationsContainer) {
+        console.error('User dashboard containers not found');
+        return;
+    }
+
+    // Load parking lots with real-time availability
+    const parkingLotsHTML = Storage.parkingLots.map(lot => {
+        const availableSlots = lot.slots.filter(slot => slot.status === 'available').length;
+        return `
+            <div class="parking-lot-card">
+                <h3>${lot.name}</h3>
+                <p>Location: ${lot.location}</p>
+                <p>Available Slots: ${availableSlots}/${lot.totalSlots}</p>
+                <p>Rate: $${lot.rate}/hour</p>
+                <a href="reservation.html?lot=${lot.id}" class="btn primary">Reserve</a>
+            </div>
+        `;
+    }).join('');
+
+    parkingLotsContainer.innerHTML = parkingLotsHTML;
+
+    // Load user reservations
+    const userReservations = Storage.reservations
+        .filter(r => r.userId === Storage.currentUser.id)
+        .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+
+    console.log('User reservations:', userReservations);
+
+    if (userReservations.length === 0) {
+        reservationsContainer.innerHTML = '<p class="no-reservations">No reservations found.</p>';
+    } else {
+        const reservationsHTML = userReservations.map(res => {
+            const lot = Storage.parkingLots.find(l => l.id === res.parkingLotId);
+            if (!lot) return '';
+
+            const startDate = new Date(res.startTime);
+            const endDate = new Date(res.endTime);
+            const now = new Date();
+            const status = res.status === 'pending' && now > startDate ? 'expired' : res.status;
+
+            return `
+                <div class="reservation-item ${status}">
+                    <h3>${lot.name}</h3>
+                    <p>Slot: ${res.slotNumber}</p>
+                    <p>Start: ${startDate.toLocaleString()}</p>
+                    <p>End: ${endDate.toLocaleString()}</p>
+                    <p>Status: ${status}</p>
+                    <p>Vehicle: ${res.vehicleNumber} (${res.vehicleType})</p>
+                    ${res.amount ? `<p>Amount: $${res.amount.toFixed(2)}</p>` : ''}
+                    ${status === 'pending' ? `<button class="btn secondary" onclick="cancelReservation(${res.id})">Cancel</button>` : ''}
+                </div>
+            `;
+        }).join('');
+
+        reservationsContainer.innerHTML = reservationsHTML;
+    }
+}
+
+function loadAdminDashboard() {
+    console.log('Loading admin dashboard data');
+    
+    const parkingLotsContainer = document.getElementById('adminParkingLots');
+    const reservationsContainer = document.getElementById('allReservations');
+    const adminActions = document.querySelector('.admin-actions');
+
+    if (!parkingLotsContainer || !reservationsContainer) {
+        console.error('Admin dashboard containers not found');
+        return;
+    }
+
+    // Add admin controls
+    if (adminActions) {
+        adminActions.innerHTML = `
+            <button class="btn primary" id="addParkingLotBtn">Add New Parking Lot</button>
+            <button class="btn secondary" onclick="resetAllData()">Reset All Data</button>
+        `;
+
+        // Add event listener for the Add Parking Lot button
+        const addParkingLotBtn = document.getElementById('addParkingLotBtn');
+        if (addParkingLotBtn) {
+            addParkingLotBtn.addEventListener('click', addParkingLot);
+        }
+    }
+
+    // Load parking lots
+    const parkingLotsHTML = Storage.parkingLots.map(lot => {
+        const availableSlots = lot.slots.filter(slot => slot.status === 'available').length;
+        return `
+            <div class="parking-lot-card">
+                <h3>${lot.name}</h3>
+                <p>Location: ${lot.location}</p>
+                <p>Available Slots: ${availableSlots}/${lot.totalSlots}</p>
+                <p>Rate: $${lot.rate}/hour</p>
+                <div class="admin-controls">
+                    <button class="btn primary" onclick="editParkingLot(${lot.id})">Edit</button>
+                    <button class="btn secondary" onclick="deleteParkingLot(${lot.id})">Delete</button>
+                    <button class="btn info" onclick="viewParkingLotDetails(${lot.id})">View Details</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    parkingLotsContainer.innerHTML = parkingLotsHTML;
+
+    // Load all reservations
+    const allReservations = Storage.reservations
+        .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+
+    console.log('All reservations:', allReservations);
+
+    if (allReservations.length === 0) {
+        reservationsContainer.innerHTML = '<p class="no-reservations">No reservations found.</p>';
+    } else {
+        const reservationsHTML = allReservations.map(res => {
+            const lot = Storage.parkingLots.find(l => l.id === res.parkingLotId);
+            const user = Storage.users.find(u => u.id === res.userId);
+            if (!lot || !user) return '';
+
+            const startDate = new Date(res.startTime);
+            const endDate = new Date(res.endTime);
+            const now = new Date();
+            const status = res.status === 'pending' && now > startDate ? 'expired' : res.status;
+
+            return `
+                <div class="reservation-item ${status}">
+                    <h3>${lot.name}</h3>
+                    <p>User: ${user.name} (${user.email})</p>
+                    <p>Slot: ${res.slotNumber}</p>
+                    <p>Start: ${startDate.toLocaleString()}</p>
+                    <p>End: ${endDate.toLocaleString()}</p>
+                    <p>Status: ${status}</p>
+                    <p>Vehicle: ${res.vehicleNumber} (${res.vehicleType})</p>
+                    ${res.amount ? `<p>Amount: $${res.amount.toFixed(2)}</p>` : ''}
+                    ${res.paymentMethod ? `<p>Payment: ${res.paymentMethod} (${res.paymentStatus})</p>` : ''}
+                    <div class="admin-controls">
+                        ${status === 'pending' ? `
+                            <button class="btn primary" onclick="updateReservationStatus(${res.id}, 'confirmed')">Confirm</button>
+                            <button class="btn secondary" onclick="updateReservationStatus(${res.id}, 'cancelled')">Cancel</button>
+                        ` : ''}
+                        <button class="btn info" onclick="viewReservationDetails(${res.id})">View Details</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        reservationsContainer.innerHTML = reservationsHTML;
+    }
+}
+
+// Reservation functions
+function loadReservationPage() {
+    if (!Storage.currentUser) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const parkingLotSelect = document.getElementById('parkingLot');
+    const slotSelect = document.getElementById('slotNumber');
+    const startTimeInput = document.getElementById('startTime');
+    const endTimeInput = document.getElementById('endTime');
+
+    // Set minimum date to current date
+    const now = new Date();
+    startTimeInput.min = now.toISOString().slice(0, 16);
+    endTimeInput.min = now.toISOString().slice(0, 16);
+
+    // Load parking lots with available slots count
+    parkingLotSelect.innerHTML = `
+        <option value="">Choose a parking lot</option>
+        ${Storage.parkingLots.map(lot => `
+            <option value="${lot.id}">${lot.name} - Available: ${lot.availableSlots}/${lot.totalSlots} slots - $${lot.rate}/hour</option>
+        `).join('')}
+    `;
+
+    // Handle parking lot selection
+    parkingLotSelect.addEventListener('change', function() {
+        const selectedLot = Storage.parkingLots.find(l => l.id === parseInt(this.value));
+        if (selectedLot) {
+            slotSelect.disabled = false;
+            
+            // Get available slots by checking existing reservations
+            const now = new Date();
+            const availableSlots = selectedLot.slots.filter(slot => {
+                // Check if slot is marked as available
+                if (slot.status !== 'available') return false;
+                
+                // Check if there are any overlapping reservations
+                const hasOverlappingReservation = Storage.reservations.some(res => {
+                    if (res.parkingLotId !== selectedLot.id || res.slotNumber !== slot.id) return false;
+                    if (res.status === 'cancelled') return false;
+                    
+                    const resStart = new Date(res.startTime);
+                    const resEnd = new Date(res.endTime);
+                    const selectedStart = new Date(startTimeInput.value);
+                    const selectedEnd = new Date(endTimeInput.value);
+                    
+                    return (selectedStart < resEnd && selectedEnd > resStart);
+                });
+                
+                return !hasOverlappingReservation;
+            });
+
+            slotSelect.innerHTML = `
+                <option value="">Choose a slot</option>
+                ${availableSlots.map(slot => `
+                    <option value="${slot.id}">Slot ${slot.id}</option>
+                `).join('')}
+            `;
+
+            if (availableSlots.length === 0) {
+                slotSelect.innerHTML = '<option value="">No available slots for selected time</option>';
+                slotSelect.disabled = true;
+            }
+        } else {
+            slotSelect.disabled = true;
+            slotSelect.innerHTML = '<option value="">Choose a slot</option>';
+        }
+    });
+
+    // Handle time changes
+    startTimeInput.addEventListener('change', function() {
+        if (parkingLotSelect.value) {
+            parkingLotSelect.dispatchEvent(new Event('change'));
+        }
+        updateReservationSummary();
+    });
+    
+    endTimeInput.addEventListener('change', function() {
+        if (parkingLotSelect.value) {
+            parkingLotSelect.dispatchEvent(new Event('change'));
+        }
+        updateReservationSummary();
+    });
+    
+    parkingLotSelect.addEventListener('change', updateReservationSummary);
+}
+
+function updateReservationSummary() {
+    const summary = document.getElementById('reservationSummary');
+    const startTime = new Date(document.getElementById('startTime').value);
+    const endTime = new Date(document.getElementById('endTime').value);
+    const parkingLotId = document.getElementById('parkingLot').value;
+
+    if (startTime && endTime && parkingLotId) {
+        const parkingLot = Storage.parkingLots.find(l => l.id === parseInt(parkingLotId));
+        const duration = (endTime - startTime) / (1000 * 60 * 60); // hours
+        const total = duration * parkingLot.rate;
+
+        document.getElementById('duration').textContent = duration.toFixed(1);
+        document.getElementById('rate').textContent = parkingLot.rate;
+        document.getElementById('total').textContent = total.toFixed(2);
+        summary.style.display = 'block';
+    } else {
+        summary.style.display = 'none';
+    }
+}
+
+function handleReservation(event) {
+    event.preventDefault();
+    if (!Storage.currentUser) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const parkingLotId = parseInt(document.getElementById('parkingLot').value);
+    const slotNumber = parseInt(document.getElementById('slotNumber').value);
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    const vehicleNumber = document.getElementById('vehicleNumber').value;
+    const vehicleType = document.getElementById('vehicleType').value;
+
+    // Debug: Log reservation details
+    console.log('Creating new reservation:', {
+        parkingLotId,
+        slotNumber,
+        startTime,
+        endTime,
+        vehicleNumber,
+        vehicleType
+    });
+
+    const newReservation = {
+        id: Storage.reservations.length + 1,
+        userId: Storage.currentUser.id,
+        parkingLotId,
+        slotNumber,
+        startTime,
+        endTime,
+        vehicleNumber,
+        vehicleType,
+        status: 'pending',
+        amount: calculateTotal(parkingLotId, startTime, endTime)
+    };
+
+    // Debug: Log the new reservation object
+    console.log('New reservation object:', newReservation);
+
+    Storage.reservations.push(newReservation);
+    Storage.saveAll();
+
+    // Debug: Verify reservations after saving
+    console.log('Reservations after saving:', Storage.reservations);
+
+    // Update parking lot availability
+    const parkingLot = Storage.parkingLots.find(l => l.id === parkingLotId);
+    const slot = parkingLot.slots.find(s => s.id === slotNumber);
+    slot.status = 'reserved';
+    parkingLot.availableSlots--;
+    Storage.saveAll();
+
+    // Store reservation details for payment page
+    localStorage.setItem('currentReservation', JSON.stringify(newReservation));
+    window.location.href = 'payment.html';
+}
+
+function calculateTotal(parkingLotId, startTime, endTime) {
+    const parkingLot = Storage.parkingLots.find(l => l.id === parkingLotId);
+    const duration = (new Date(endTime) - new Date(startTime)) / (1000 * 60 * 60);
+    return duration * parkingLot.rate;
+}
+
+// Payment functions
+function loadPaymentPage() {
+    if (!Storage.currentUser) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const reservation = JSON.parse(localStorage.getItem('currentReservation'));
+    if (!reservation) {
+        window.location.href = 'dashboard.html';
+        return;
+    }
+
+    const parkingLot = Storage.parkingLots.find(l => l.id === reservation.parkingLotId);
+
+    // Display reservation details
+    document.getElementById('paymentParkingLot').textContent = parkingLot.name;
+    document.getElementById('paymentSlotNumber').textContent = reservation.slotNumber;
+    document.getElementById('paymentStartTime').textContent = new Date(reservation.startTime).toLocaleString();
+    document.getElementById('paymentEndTime').textContent = new Date(reservation.endTime).toLocaleString();
+    document.getElementById('paymentVehicleNumber').textContent = reservation.vehicleNumber;
+    document.getElementById('paymentVehicleType').textContent = reservation.vehicleType;
+    document.getElementById('paymentTotal').textContent = `$${reservation.amount.toFixed(2)}`;
+
+    // Handle payment method selection
+    const paymentMethod = document.getElementById('paymentMethod');
+    const cardDetails = document.getElementById('cardDetails');
+    const upiDetails = document.getElementById('upiDetails');
+
+    paymentMethod.addEventListener('change', function() {
+        cardDetails.style.display = this.value === 'card' ? 'block' : 'none';
+        upiDetails.style.display = this.value === 'upi' ? 'block' : 'none';
+    });
+}
+
+function handlePayment(event) {
+    event.preventDefault();
+    const paymentMethod = document.getElementById('paymentMethod').value;
+    const reservation = JSON.parse(localStorage.getItem('currentReservation'));
+
+    if (!reservation) {
+        alert('No reservation found');
+        return;
+    }
+
+    // Update reservation status
+    const reservationIndex = Storage.reservations.findIndex(r => r.id === reservation.id);
+    Storage.reservations[reservationIndex].status = 'confirmed';
+    Storage.reservations[reservationIndex].paymentMethod = paymentMethod;
+    Storage.reservations[reservationIndex].paymentStatus = 'completed';
+    Storage.saveAll();
+
+    // Clear current reservation
+    localStorage.removeItem('currentReservation');
+
+    alert('Payment successful! Your reservation is confirmed.');
+    window.location.href = 'dashboard.html';
+}
+
+// Admin functions
+function addParkingLot() {
+    const name = prompt('Enter parking lot name:');
+    if (!name) return;
+    
+    const location = prompt('Enter parking lot location:');
+    if (!location) return;
+    
+    const totalSlots = parseInt(prompt('Enter total number of slots:'));
+    if (isNaN(totalSlots) || totalSlots <= 0) {
+        alert('Please enter a valid number of slots');
+        return;
+    }
+    
+    const rate = parseFloat(prompt('Enter hourly rate ($):'));
+    if (isNaN(rate) || rate <= 0) {
+        alert('Please enter a valid rate');
+        return;
+    }
+
+    const newParkingLot = {
+        id: Storage.parkingLots.length + 1,
+        name,
+        location,
+        totalSlots,
+        availableSlots: totalSlots,
+        rate,
+        slots: Array(totalSlots).fill().map((_, i) => ({
+            id: i + 1,
+            status: 'available'
+        }))
+    };
+
+    Storage.parkingLots.push(newParkingLot);
+    Storage.saveAll();
+    loadAdminDashboard();
+}
+
+function editParkingLot(lotId) {
+    const lot = Storage.parkingLots.find(l => l.id === lotId);
+    if (!lot) return;
+
+    const name = prompt('Enter new parking lot name:', lot.name);
+    if (!name) return;
+    
+    const location = prompt('Enter new parking lot location:', lot.location);
+    if (!location) return;
+    
+    const rate = parseFloat(prompt('Enter new hourly rate ($):', lot.rate));
+    if (isNaN(rate) || rate <= 0) {
+        alert('Please enter a valid rate');
+        return;
+    }
+
+    lot.name = name;
+    lot.location = location;
+    lot.rate = rate;
+    
+    Storage.saveAll();
+    loadAdminDashboard();
+}
+
+// Add a function to reset all data
+function resetAllData() {
+    localStorage.clear();
+    Storage.init();
+    window.location.reload();
+}
+
+// Add function to cancel reservations
+function cancelReservation(reservationId) {
+    if (!confirm('Are you sure you want to cancel this reservation?')) return;
+    
+    const reservation = Storage.reservations.find(r => r.id === reservationId);
+    if (!reservation) return;
+    
+    // Update reservation status
+    reservation.status = 'cancelled';
+    Storage.saveAll();
+    
+    // Update parking lot availability
+    const parkingLot = Storage.parkingLots.find(l => l.id === reservation.parkingLotId);
+    if (parkingLot) {
+        const slot = parkingLot.slots.find(s => s.id === reservation.slotNumber);
+        if (slot) {
+            slot.status = 'available';
+            parkingLot.availableSlots++;
+            Storage.saveAll();
+        }
+    }
+    
+    // Reload dashboard
+    loadUserDashboard();
+}
+
+// Add new admin functions
+function deleteParkingLot(lotId) {
+    if (!confirm('Are you sure you want to delete this parking lot? This will also cancel all associated reservations.')) {
+        return;
+    }
+
+    // Find the parking lot
+    const lotIndex = Storage.parkingLots.findIndex(l => l.id === lotId);
+    if (lotIndex === -1) return;
+
+    // Cancel all associated reservations
+    Storage.reservations = Storage.reservations.map(res => {
+        if (res.parkingLotId === lotId) {
+            return { ...res, status: 'cancelled' };
+        }
+        return res;
+    });
+
+    // Remove the parking lot
+    Storage.parkingLots.splice(lotIndex, 1);
+
+    // Save changes
+    Storage.saveAll();
+    loadAdminDashboard();
+}
+
+function viewParkingLotDetails(lotId) {
+    const lot = Storage.parkingLots.find(l => l.id === lotId);
+    if (!lot) return;
+
+    const reservations = Storage.reservations.filter(r => r.parkingLotId === lotId);
+    const activeReservations = reservations.filter(r => r.status === 'confirmed');
+    const pendingReservations = reservations.filter(r => r.status === 'pending');
+    const cancelledReservations = reservations.filter(r => r.status === 'cancelled');
+
+    const details = `
+        Parking Lot Details:
+        Name: ${lot.name}
+        Location: ${lot.location}
+        Total Slots: ${lot.totalSlots}
+        Available Slots: ${lot.availableSlots}
+        Rate: $${lot.rate}/hour
+        
+        Reservations:
+        Active: ${activeReservations.length}
+        Pending: ${pendingReservations.length}
+        Cancelled: ${cancelledReservations.length}
+    `;
+
+    alert(details);
+}
+
+function viewReservationDetails(reservationId) {
+    const res = Storage.reservations.find(r => r.id === reservationId);
+    if (!res) return;
+
+    const lot = Storage.parkingLots.find(l => l.id === res.parkingLotId);
+    const user = Storage.users.find(u => u.id === res.userId);
+    if (!lot || !user) return;
+
+    const details = `
+        Reservation Details:
+        Parking Lot: ${lot.name}
+        User: ${user.name} (${user.email})
+        Slot: ${res.slotNumber}
+        Start: ${new Date(res.startTime).toLocaleString()}
+        End: ${new Date(res.endTime).toLocaleString()}
+        Status: ${res.status}
+        Vehicle: ${res.vehicleNumber} (${res.vehicleType})
+        Amount: $${res.amount?.toFixed(2) || 'N/A'}
+        Payment: ${res.paymentMethod || 'N/A'} (${res.paymentStatus || 'N/A'})
+    `;
+
+    alert(details);
+}
+
+function updateReservationStatus(reservationId, newStatus) {
+    const reservation = Storage.reservations.find(r => r.id === reservationId);
+    if (!reservation) return;
+
+    const oldStatus = reservation.status;
+    reservation.status = newStatus;
+
+    // Update parking lot availability if needed
+    if (oldStatus === 'pending' && newStatus === 'cancelled') {
+        const parkingLot = Storage.parkingLots.find(l => l.id === reservation.parkingLotId);
+        if (parkingLot) {
+            const slot = parkingLot.slots.find(s => s.id === reservation.slotNumber);
+            if (slot) {
+                slot.status = 'available';
+                parkingLot.availableSlots++;
+            }
+        }
+    }
+
+    Storage.saveAll();
+    loadAdminDashboard();
+}
+
+// Event Listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Verify and fix data first
+    Storage.verifyAndFixData();
+
+    // Login page
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
+
+    // Register page
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', handleRegister);
+    }
+
+    // Dashboard page
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleLogout);
+    }
+
+    // Reservation page
+    const reservationForm = document.getElementById('reservationForm');
+    if (reservationForm) {
+        loadReservationPage();
+        reservationForm.addEventListener('submit', handleReservation);
+    }
+
+    // Payment page
+    const paymentForm = document.getElementById('paymentForm');
+    if (paymentForm) {
+        loadPaymentPage();
+        paymentForm.addEventListener('submit', handlePayment);
+    }
+
+    // Admin dashboard
+    const addParkingLotBtn = document.getElementById('addParkingLotBtn');
+    if (addParkingLotBtn) {
+        addParkingLotBtn.addEventListener('click', addParkingLot);
+    }
+
+    // Load dashboard if on dashboard page
+    if (document.getElementById('dashboard-container')) {
+        loadDashboard();
+    }
+}); 
