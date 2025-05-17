@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - Smart Parking System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">SmartPark</div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+            <a href="#" class="nav-link" id="logoutBtn">Logout</a>
+        </div>
+    </nav>
+
+    <main class="payment-container">
+        <h1>Complete Your Payment</h1>
+        
+        <div class="payment-details">
+            <h2>Reservation Details</h2>
+            <div class="details-grid">
+                <div class="detail-item">
+                    <span class="label">Parking Lot:</span>
+                    <span id="paymentParkingLot">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Slot Number:</span>
+                    <span id="paymentSlotNumber">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Start Time:</span>
+                    <span id="paymentStartTime">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">End Time:</span>
+                    <span id="paymentEndTime">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Vehicle Number:</span>
+                    <span id="paymentVehicleNumber">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Vehicle Type:</span>
+                    <span id="paymentVehicleType">-</span>
+                </div>
+                <div class="detail-item total">
+                    <span class="label">Total Amount:</span>
+                    <span id="paymentTotal">$0</span>
+                </div>
+            </div>
+        </div>
+
+        <form id="paymentForm" class="payment-form">
+            <div class="form-group">
+                <label for="paymentMethod">Payment Method</label>
+                <select id="paymentMethod" name="paymentMethod" required>
+                    <option value="">Select payment method</option>
+                    <option value="card">Credit/Debit Card</option>
+                    <option value="cash">Cash</option>
+                    <option value="upi">UPI</option>
+                </select>
+            </div>
+
+            <div id="cardDetails" class="payment-method-details" style="display: none;">
+                <div class="form-group">
+                    <label for="cardNumber">Card Number</label>
+                    <input type="text" id="cardNumber" name="cardNumber" placeholder="1234 5678 9012 3456">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="expiryDate">Expiry Date</label>
+                        <input type="text" id="expiryDate" name="expiryDate" placeholder="MM/YY">
+                    </div>
+                    <div class="form-group">
+                        <label for="cvv">CVV</label>
+                        <input type="text" id="cvv" name="cvv" placeholder="123">
+                    </div>
+                </div>
+            </div>
+
+            <div id="upiDetails" class="payment-method-details" style="display: none;">
+                <div class="form-group">
+                    <label for="upiId">UPI ID</label>
+                    <input type="text" id="upiId" name="upiId" placeholder="username@upi">
+                </div>
+            </div>
+
+            <button type="submit" class="btn primary">Complete Payment</button>
+        </form>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html> 
