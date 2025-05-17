@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Smart Parking System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">SmartPark</div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="reservation.html" class="nav-link">New Reservation</a>
+            <a href="#" class="nav-link" id="logoutBtn">Logout</a>
+        </div>
+    </nav>
+
+    <main class="dashboard-container">
+        <div class="dashboard-header">
+            <h1>Welcome, <span id="userName">User</span></h1>
+            <div class="user-type-badge" id="userTypeBadge">User</div>
+        </div>
+
+        <!-- User Dashboard -->
+        <div id="userDashboard" class="dashboard-section">
+            <h2>Available Parking Lots</h2>
+            <div class="parking-lots-grid" id="parkingLots">
+                <!-- Parking lots will be dynamically added here -->
+            </div>
+
+            <h2>Your Reservations</h2>
+            <div class="reservations-list" id="userReservations">
+                <!-- Reservations will be dynamically added here -->
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="dashboard-section" style="display: none;">
+            <div class="admin-actions">
+                <button class="btn primary" id="addParkingLotBtn">Add New Parking Lot</button>
+            </div>
+
+            <h2>Manage Parking Lots</h2>
+            <div class="admin-parking-lots" id="adminParkingLots">
+                <!-- Admin parking lots will be dynamically added here -->
+            </div>
+
+            <h2>All Reservations</h2>
+            <div class="reservations-list" id="allReservations">
+                <!-- All reservations will be dynamically added here -->
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html> 
